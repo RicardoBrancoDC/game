@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heróis da Proteção e Defesa Civil</title>
+  <style>
+    :root {
+      --panel: rgba(10, 24, 40, 0.86);
+      --text: #ffffff;
+      --shadow: 0 12px 28px rgba(0,0,0,0.35);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #0c1b2f 0%, #102843 100%);
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+    }
+    #game {
+      position: relative;
+      width: min(1365px, 96vw);
+      aspect-ratio: 1365 / 1024;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: #000;
+    }
+    .screen { position: absolute; inset: 0; display: none; background: #000; }
+    .screen.active { display: block; }
+    .bg {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      user-select: none; pointer-events: none;
+    }
+    .hotspot {
+      position: absolute; background: rgba(255,255,255,0); border: none;
+      cursor: pointer; border-radius: 24px;
+    }
+    .hotspot:hover, .hotspot.show-debug {
+      outline: 4px solid rgba(255,255,255,0.42);
+      background: rgba(255,255,255,0.10);
+    }
+    .panel {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      width: min(88%, 980px); background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 22px 24px; backdrop-filter: blur(6px);
+    }
+    .bottom-panel { bottom: 26px; }
+    .side-panel{
+      position:absolute;
+      top:18%;
+      bottom:6%;
+      width:44%;
+      max-width:none;
+      transform:none;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      padding:24px 24px 28px 24px;
+      z-index:5;
+    }
+    .side-panel.left{
+      left:2.5%;
+      right:auto;
+    }
+    .side-panel.right{
+      right:2.5%;
+      left:auto;
+    }
+    .side-panel h2{
+      font-size: clamp(28px, 2.6vw, 48px);
+      margin-bottom: 10px;
+    }
+    .side-panel p{
+      font-size: clamp(17px, 1.35vw, 25px);
+      line-height: 1.38;
+    }
+
+    .thinking-character{
+      position:absolute;
+      width:13%;
+      max-width:170px;
+      pointer-events:none;
+      z-index:7;
+      filter: drop-shadow(0 12px 20px rgba(0,0,0,0.35));
+    }
+    .thinking-character.left{
+      left:53%;
+      top:18%;
+    }
+    .thinking-character.right{
+      left:34%;
+      top:18%;
+    }
+    .panel h1,.panel h2,.panel h3,.panel p { margin: 0; }
+    .panel h2 { font-size: clamp(26px, 2.3vw, 40px); margin-bottom: 8px; }
+    .panel p { font-size: clamp(16px, 1.3vw, 24px); line-height: 1.35; }
+    .btn-row { margin-top: 18px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .ui-btn {
+      border: none; border-radius: 999px; padding: 14px 22px;
+      font-size: clamp(16px, 1.2vw, 22px); font-weight: 700; cursor: pointer;
+      color: #fff; box-shadow: var(--shadow);
+    }
+    .primary { background: linear-gradient(180deg, #ff9800, #f06d00); }
+    .secondary { background: linear-gradient(180deg, #43c000, #2f9700); }
+    .neutral { background: linear-gradient(180deg, #4a607a, #304153); }
+    .danger { background: linear-gradient(180deg, #ff5b67, #d92d39); }
+    .warning { background: linear-gradient(180deg, #f7c948, #d98f00); color:#1f1f1f; }
+    .penalty-note{
+      margin-top:10px;
+      font-size: clamp(14px, 1vw, 18px);
+      color:#ffd84d;
+      font-weight:700;
+    }
+    .phase-badge,.star-badge {
+      position: absolute; border-radius: 999px; font-weight: 700; box-shadow: var(--shadow);
+    }
+    .phase-badge {
+      background: linear-gradient(180deg, #ff9800, #f06d00); color: #fff;
+      padding: 9px 16px; font-size: clamp(14px, 1vw, 20px);
+    }
+    .star-badge {
+      background: rgba(0,0,0,0.75); color: #ffd84d; padding: 8px 13px;
+      font-size: clamp(16px, 1.1vw, 22px);
+    }
+    .lock {
+      position: absolute; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.34); color: #fff; border-radius: 24px;
+      font-size: clamp(34px, 2vw, 54px); pointer-events: none;
+    }
+    .mission-header {
+      position: absolute;
+      left: 50%;
+      top: 22px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.72);
+      border-radius: 18px;
+      padding: 14px 18px;
+      max-width: min(42vw, 540px);
+    }
+    .mission-header h3 { font-size: clamp(18px, 1.5vw, 30px); margin-bottom: 6px; }
+    .mission-header p { font-size: clamp(13px, 1vw, 18px); line-height: 1.35; }
+    .hud {
+      position: absolute; right: 2px; top: 22px; display: flex; gap: 10px; flex-wrap: wrap;
+      justify-content: flex-end; max-width: min(44vw, 520px);
+    }
+    .hud .box {
+      background: rgba(0,0,0,0.72); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px; padding: 12px 16px; font-weight: 700;
+      font-size: clamp(13px, 1vw, 18px); box-shadow: var(--shadow);
+    }
+    .progress {
+      position: absolute; left: 50%; transform: translateX(-50%); top: 24px;
+      width: min(42vw, 430px); height: 24px; border-radius: 999px;
+      background: rgba(0,0,0,0.55); overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.14); box-shadow: var(--shadow);
+    }
+    .progress-bar {
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, #ffce3a, #ff7b00, #e63946);
+      transform-origin: left center;
+    }
+    .score-panel {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.48);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .score-card {
+      width: min(86%, 760px); background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 28px;
+      padding: 30px; box-shadow: var(--shadow); text-align: center;
+    }
+    .score-card h2 { font-size: clamp(28px, 2.4vw, 48px); margin-bottom: 10px; }
+    .big-stars {
+      font-size: clamp(42px, 5vw, 82px); margin: 18px 0; color: #ffd84d;
+      text-shadow: 0 6px 14px rgba(0,0,0,0.35);
+    }
+    .score-card p { font-size: clamp(16px, 1.3vw, 24px); line-height: 1.4; margin-bottom: 10px; }
+    .tutorial-wrap {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      padding: 28px; background: linear-gradient(180deg, rgba(12,28,47,0.95), rgba(10,24,40,0.92));
+    }
+    .tutorial-card {
+      width: min(92%, 980px); background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.20); border-radius: 28px;
+      padding: 28px; box-shadow: var(--shadow); backdrop-filter: blur(4px);
+    }
+    .tutorial-card h2 { font-size: clamp(30px, 2.6vw, 48px); margin: 0 0 16px 0; text-align: center; }
+    .tutorial-card ol { margin: 0; padding-left: 26px; font-size: clamp(18px, 1.4vw, 26px); line-height: 1.5; }
+    .tutorial-card li { margin-bottom: 12px; }
+    .tip-box {
+      margin-top: 20px; background: rgba(255,255,255,0.12); border-radius: 20px;
+      padding: 16px 18px; font-size: clamp(16px, 1.2vw, 22px); line-height: 1.4;
+    }
+    .footer-note {
+      position: absolute; right: 18px; bottom: 14px; font-size: 13px;
+      background: rgba(0,0,0,0.48); padding: 8px 12px; border-radius: 999px;
+    }
+
+
+    
+    .news-banner{
+      position:absolute;
+      left:50%;
+      top:0.1%;
+      transform:translateX(-50%);
+      width:min(76%, 1040px);
+      height:54px;
+      display:flex;
+      align-items:center;
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      z-index:6;
+      background:rgba(8,18,32,0.88);
+      border:1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(6px);
+    }
+    .news-banner-label{
+      flex:0 0 auto;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 18px;
+      font-weight:900;
+      font-size: clamp(14px, 1vw, 18px);
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      color:#fff;
+      background:linear-gradient(180deg, #c81919, #8d1010);
+      border-right:1px solid rgba(255,255,255,0.18);
+      white-space:nowrap;
+    }
+    .news-banner-track{
+      position:relative;
+      flex:1 1 auto;
+      height:100%;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+    }
+    .news-banner-text{
+      position:absolute;
+      white-space:nowrap;
+      font-weight:800;
+      font-size: clamp(15px, 1.08vw, 20px);
+      color:#f6fbff;
+      padding-left:100%;
+      animation: tickerScroll 14s linear infinite;
+      text-shadow:0 1px 2px rgba(0,0,0,0.45);
+    }
+    @keyframes tickerScroll{
+      0%{ transform:translateX(0); }
+      100%{ transform:translateX(-100%); }
+    }
+
+    .alert-news-banner{
+      position:absolute;
+      left:50%;
+      top:0.2%;
+      transform:translateX(-50%);
+      width:min(76%, 1040px);
+      height:54px;
+      display:flex;
+      align-items:center;
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      z-index:6;
+      background:rgba(8,18,32,0.88);
+      border:1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(6px);
+    }
+    .alert-news-banner .news-banner-label{
+      background:linear-gradient(180deg, #d66b00, #a84800);
+    }
+
+
+    .shelter-news-banner{
+      position:absolute;
+      left:50%;
+      top:0.2%;
+      transform:translateX(-50%);
+      width:min(76%, 1040px);
+      height:54px;
+      display:flex;
+      align-items:center;
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      z-index:6;
+      background:rgba(8,18,32,0.88);
+      border:1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(6px);
+    }
+    .shelter-news-banner .news-banner-label{
+      background:linear-gradient(180deg, #1ca44a, #117a33);
+    }
+
+    .send-hotspot{
+
+      position:absolute;
+      left:35.3%;
+      top:67.5%;
+      width:29.6%;
+      height:13.6%;
+      border:none;
+      background:rgba(255,255,255,0);
+      border-radius:999px;
+      cursor:pointer;
+      z-index:8;
+    }
+    .send-hotspot:hover, .send-hotspot.show-debug{
+      outline:4px solid rgba(255,255,255,0.42);
+      background:rgba(255,255,255,0.08);
+    }
+    .back-corner-btn{
+      position:absolute;
+      right:2.2%;
+      bottom:2.4%;
+      z-index:8;
+      padding:12px 22px;
+    }
+
+    .center-mission-screen{
+      position:absolute;
+      left:25.11%;
+      top:8.15%;
+      width:50.2%;
+      height:39.45%;
+      object-fit:cover;
+      object-position:center;
+      border-radius:2.2% / 3.8%;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.10),
+        0 12px 28px rgba(0,0,0,0.22);
+      z-index:1;
+      pointer-events:none;
+      transform: perspective(1200px) rotateX(0.2deg);
+      filter: saturate(1.02) contrast(1.01);
+    }
+    .map-avatar{
+      position:absolute;
+      width:9%;
+      max-width:150px;
+      pointer-events:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35));
+      animation: floatChar 2.8s ease-in-out infinite;
+      z-index: 4;
+    }
+    .map-marker{
+      position:absolute;
+      width:78px;
+      height:78px;
+      border:none;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 28%, #ffd56a 0%, #ffac33 38%, #f07b00 70%, #cf5400 100%);
+      color:#fff;
+      font-weight:900;
+      font-size:28px;
+      cursor:pointer;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.34), inset 0 4px 0 rgba(255,255,255,0.28);
+      z-index:5;
+      transition: transform .18s ease, filter .18s ease;
+    }
+    .map-marker:hover{
+      transform: scale(1.08);
+      filter: brightness(1.06);
+    }
+    .map-marker.available{
+      animation: pulseMission 1.8s ease-in-out infinite;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.34), inset 0 4px 0 rgba(255,255,255,0.28), 0 0 0 0 rgba(255,216,77,0.65);
+    }
+    .map-marker.available::after{
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius:50%;
+      border:4px solid rgba(255,216,77,0.55);
+      animation: ringMission 1.8s ease-out infinite;
+      pointer-events:none;
+    }
+    .map-marker.locked{
+      background: radial-gradient(circle at 30% 28%, #b8c0ca 0%, #8d97a5 45%, #5f6876 100%);
+      cursor:not-allowed;
+    }
+    .map-marker .marker-lock{
+      position:absolute;
+      right:-6px;
+      top:-6px;
+      width:32px;
+      height:32px;
+      border-radius:50%;
+      background: rgba(0,0,0,0.72);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.28);
+    }
+    .map-marker .marker-stars{
+      position:absolute;
+      left:50%;
+      bottom:-22px;
+      transform:translateX(-50%);
+      min-width:70px;
+      text-align:center;
+      font-size:18px;
+      color:#ffd84d;
+      text-shadow:0 3px 8px rgba(0,0,0,0.5);
+      font-weight:700;
+      display:none;
+    }
+    .map-marker.show-stars .marker-stars{
+      display:block;
+    }
+    .map-label{
+      position:absolute;
+      left:50%;
+      top:-14px;
+      transform:translate(-50%, -100%);
+      background: rgba(0,0,0,0.75);
+      color:#fff;
+      border-radius:999px;
+      padding:7px 12px;
+      font-size:14px;
+      font-weight:800;
+      white-space:nowrap;
+      box-shadow: 0 8px 14px rgba(0,0,0,0.24);
+      pointer-events:none;
+    }
+    .map-tip{
+      position:absolute;
+      left:50%;
+      top:86px;
+      transform:translateX(-50%);
+      background: rgba(0,0,0,0.78);
+      color:#fff;
+      border-radius:14px;
+      padding:8px 10px;
+      font-size:12px;
+      line-height:1.2;
+      width:126px;
+      text-align:center;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .16s ease;
+    }
+    .map-marker:hover .map-tip{
+      opacity:1;
+    }
+
+    
+.problem-highlight{
+  position:absolute;
+  border:6px solid rgba(255,220,80,0.95);
+  border-radius:50%;
+  box-shadow:0 0 0 10px rgba(255,220,80,0.25);
+  animation:pulseHighlight 1.6s ease-in-out infinite;
+  pointer-events:none;
+  z-index:3;
+}
+.problem-label{
+  position:absolute;
+  background:rgba(0,0,0,0.75);
+  color:#fff;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:800;
+  pointer-events:none;
+  z-index:4;
+}
+@keyframes pulseHighlight{
+  0%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.08);opacity:.85}
+  100%{transform:scale(1);opacity:1}
+}
+
+@keyframes pulseMission {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    @keyframes ringMission {
+      0% {
+        transform: scale(0.9);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(1.35);
+        opacity: 0;
+      }
+    }
+    @keyframes floatChar {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+      100% { transform: translateY(0px); }
+    }
+    @media (max-width: 900px) {
+      .panel { width: 92%; }
+      .progress { width: 58vw; }
+      .mission-header, .hud { max-width: 48%; }
+      .footer-note { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <section id="screen-start" class="screen active">
+      <img class="bg" src="happy_start_screen.png" alt="Tela inicial" />
+      <img src="alex_character.png" alt="Alex" style="position:absolute; left:5.5%; bottom:2%; width:24%; max-width:260px; pointer-events:none; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35)); animation: floatChar 2.8s ease-in-out infinite;" />
+      <img src="ana_character.png" alt="Ana" style="position:absolute; right:5.5%; bottom:2%; width:24%; max-width:260px; pointer-events:none; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35)); animation: floatChar 3.1s ease-in-out infinite 0.2s;" />
+      <button class="hotspot" aria-label="Jogar" style="left:30%; top:53%; width:34.2%; height:11.8%;" onclick="goToCharacterSelect()"></button>
+      <button class="hotspot" aria-label="Como jogar" style="left:30%; top:70.3%; width:36.5%; height:11.9%;" onclick="showScreen('screen-tutorial')"></button>
+    </section>
+
+    <section id="screen-tutorial" class="screen">
+      <div class="tutorial-wrap">
+        <div class="tutorial-card">
+          <h2>Como Jogar</h2>
+          <ol>
+            <li>Escolha seu personagem, Alex ou Ana.</li>
+            <li>No mapa, clique na área de risco que estiver liberada.</li>
+            <li>Observe a situação e vá para o Centro de Monitoramento.</li>
+            <li>Envie o <strong>Defesa Civil Alerta (DCA)</strong> o mais rápido possível.</li>
+            <li>Quanto mais rápido você agir, mais estrelas vai ganhar.</li>
+            <li>Depois do alerta, a população segue para o <strong>Abrigo Seguro</strong>.</li>
+          </ol>
+          <div class="tip-box">
+            Dica. O objetivo do jogo é aprender que a <strong>Proteção e Defesa Civil</strong> monitora riscos e envia alertas para proteger vidas.
+          </div>
+          <div class="btn-row" style="justify-content:center; margin-top:24px;">
+            <button class="ui-btn primary" onclick="goToCharacterSelect()">Escolher personagem</button>
+            <button class="ui-btn neutral" onclick="showScreen('screen-start')">Voltar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-character" class="screen">
+      <img class="bg" src="Escolha de Personagem.png" alt="Escolha de personagem" />
+      <button class="hotspot" aria-label="Escolher Alex" style="left:14%; top:32%; width:30%; height:55%;" onclick="selectCharacter('Alex')"></button>
+      <button class="hotspot" aria-label="Escolher Ana" style="left:55%; top:32%; width:30%; height:55%;" onclick="selectCharacter('Ana')"></button>
+      <button class="ui-btn neutral" style="position:absolute; left:20px; top:20px;" onclick="showScreen('screen-start')">Voltar</button>
+    </section>
+
+    <section id="screen-map" class="screen">
+      <img class="bg" src="Copilot_20260322_115351.png" alt="Mapa da cidade" />
+
+      <div class="mission-header" style="max-width:min(34vw, 430px);">
+        <h3>Mapa da Cidade</h3>
+        <p><strong id="playerNameMap">Alex</strong>, escolha a próxima missão e envie o <strong>Defesa Civil Alerta (DCA)</strong>.</p>
+      </div>
+
+      <div class="hud">
+        <div class="box">Personagem: <span id="mapCharacter">Alex</span></div>
+        <div class="box">Missões: <span id="missionsDone">0</span>/5</div>
+        <div class="box">⭐ <span id="totalStars">0</span></div>
+      </div>
+
+      <img id="mapAvatar" class="map-avatar" src="alex_character.png" alt="Personagem no mapa" style="left:8%; top:27%; width:29%;" />
+
+      <button id="marker1" class="map-marker" style="left:11%; top:16%;" onclick="openMission(1)">
+        1
+        <span class="map-label">Tempestade</span>
+        <span class="map-tip">Barragem e chuva forte</span>
+        <span id="markerStars1" class="marker-stars"></span>
+      </button>
+
+      <button id="marker2" class="map-marker locked" style="left:13%; top:50%;" onclick="openMission(2)">
+        2
+        <span class="map-label">Inundação</span>
+        <span class="map-tip">Água entrando nas casas</span>
+        <span class="marker-lock">🔒</span>
+        <span id="markerStars2" class="marker-stars"></span>
+      </button>
+
+      <button id="marker3" class="map-marker locked" style="left:78%; top:20%;" onclick="openMission(3)">
+        3
+        <span class="map-label">Deslizamento</span>
+        <span class="map-tip">Encosta em risco</span>
+        <span class="marker-lock">🔒</span>
+        <span id="markerStars3" class="marker-stars"></span>
+      </button>
+
+      <button id="marker4" class="map-marker locked" style="left:79%; top:49%;" onclick="openMission(4)">
+        4
+        <span class="map-label">Incêndio</span>
+        <span class="map-tip">Fogo perto das casas</span>
+        <span class="marker-lock">🔒</span>
+        <span id="markerStars4" class="marker-stars"></span>
+      </button>
+
+      <button id="marker5" class="map-marker locked" style="left:62%; top:79%;" onclick="openMission(5)">
+        5
+        <span class="map-label">Produto perigoso</span>
+        <span class="map-tip">Contaminação no rio</span>
+        <span class="marker-lock">🔒</span>
+        <span id="markerStars5" class="marker-stars"></span>
+      </button>
+
+      <button class="ui-btn neutral" style="position:absolute; left:22px; bottom:24px; z-index:6;" onclick="showScreen('screen-start')">Menu inicial</button>
+      <button class="ui-btn secondary" style="position:absolute; left:210px; bottom:24px; z-index:6;" onclick="resetGame()">Reiniciar jogo</button>
+    </section>
+
+    <section id="screen-briefing" class="screen">
+      <img id="briefingBg" class="bg" src="barragem_tempestade_cartoon.png" alt="Situação de risco" />
+      
+      <div id="problemHighlight" class="problem-highlight" style="display:none;"></div>
+      <div id="problemLabel" class="problem-label" style="display:none;"></div>
+      <img id="briefingThinkingCharacter" class="thinking-character left" src="alex_pensando_transparente_v2.png" alt="Personagem pensando" />
+
+
+      <div class="mission-header">
+        <h3 id="briefingTitle">Fase 1</h3>
+        <p id="briefingText"></p>
+      </div>
+      <div class="hud">
+        <div class="box">Personagem: <span id="briefingCharacter">Alex</span></div>
+        <div class="box">Prepare-se para agir rápido</div>
+      </div>
+      <div id="briefingPanel" class="panel side-panel left">
+        <h2 id="briefingHeadline">Situação detectada</h2>
+        <p id="briefingBody"></p>
+        <div class="btn-row">
+          <button class="ui-btn primary" onclick="showMissionCenter()">Ir para o Centro de Monitoramento</button>
+          <button class="ui-btn warning" onclick="waitProblemIncrease()">Esperar o problema aumentar</button>
+          <button class="ui-btn neutral" onclick="showScreen('screen-map')">Voltar ao mapa</button>
+        </div>
+        <div id="penaltyNote" class="penalty-note" style="display:none;"></div>
+      </div>
+    </section>
+
+
+    <section id="screen-wait" class="screen">
+      <img id="waitBg" class="bg" src="barragem_tempestade_cartoon.png" alt="Problema aumentando" />
+      <img id="waitThinkingCharacter" class="thinking-character left" src="alex_pensando_transparente_v2.png" alt="Personagem pensando" />
+
+      <div class="mission-header">
+        <h3>O problema aumentou</h3>
+        <p id="waitTopText">Você esperou, e a situação ficou mais perigosa. Agora a Defesa Civil precisa agir ainda mais rápido.</p>
+      </div>
+      <div class="hud">
+        <div class="box">Personagem: <span id="waitCharacter">Alex</span></div>
+        <div class="box">Estrelas máximas: <span id="maxStarsText">2</span></div>
+      </div>
+      <div id="waitPanel" class="panel side-panel left">
+        <h2 id="waitHeadline">A situação piorou</h2>
+        <p id="waitBody">Esperar pode aumentar o risco para a população. Vá agora para o Centro de Monitoramento.</p>
+        <div class="btn-row">
+          <button class="ui-btn primary" onclick="showMissionCenter()">Ir para o Centro de Monitoramento</button>
+          <button class="ui-btn neutral" onclick="showScreen('screen-map')">Voltar ao mapa</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-center" class="screen">
+      <img class="bg" src="centro_monitoramento_defesa_civil.png" alt="Centro de monitoramento" />
+      <img id="centerMissionScreen" class="center-mission-screen" src="barragem_tempestade_cartoon.png" alt="Situação monitorada no telão" />
+
+      <div class="news-banner" aria-label="Plantão de emergência">
+        <div class="news-banner-label">ATENÇÃO</div>
+        <div class="news-banner-track">
+          <div id="centerNewsBanner" class="news-banner-text">Os sensores indicam risco. Envie o Defesa Civil Alerta o mais rápido possível.</div>
+        </div>
+      </div>
+
+      <div class="progress" style="top:7.9%; width:min(31vw, 360px); z-index:7;">
+        <div id="timeBar" class="progress-bar"></div>
+      </div>
+
+      <div class="hud" style="top:9.9%; right:0.8%; max-width:min(36vw, 430px);">
+        <div class="box">Tempo: <span id="timerText">0.0s</span></div>
+        <div class="box">3 estrelas até 5s</div>
+        <div class="box">2 estrelas até 10s</div>
+      </div>
+
+      <button id="sendHotspot" class="send-hotspot hotspot" aria-label="Enviar alerta" onclick="sendAlert()"></button>
+      <button class="ui-btn neutral back-corner-btn" onclick="backToBriefing()">Voltar</button>
+    </section>
+
+    <section id="screen-alert" class="screen">
+      <img class="bg" src="alerta_defesa_civil_celular.png" alt="População recebendo alerta" />
+
+      <div class="alert-news-banner" aria-label="Alerta recebido">
+        <div class="news-banner-label">ALERTA</div>
+        <div class="news-banner-track">
+          <div id="alertNewsBanner" class="news-banner-text">A população recebeu o Defesa Civil Alerta e agora sabe como agir.</div>
+        </div>
+      </div>
+
+      <div class="panel bottom-panel">
+        <h2 id="alertHeadline">A mensagem chegou</h2>
+        <p id="alertBody">Agora as famílias podem seguir para um lugar seguro.</p>
+        <div class="btn-row">
+          <button class="ui-btn primary" onclick="showMissionShelter()">Ir para o Abrigo Seguro</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-shelter" class="screen">
+      <img class="bg" src="Copilot_20260322_122730.png" alt="População indo para o abrigo" />
+
+      <div class="shelter-news-banner" aria-label="Abrigo seguro">
+        <div class="news-banner-label">ABRIGO</div>
+        <div class="news-banner-track">
+          <div id="shelterNewsBanner" class="news-banner-text">As famílias seguiram a orientação da Proteção e Defesa Civil e foram para um local protegido.</div>
+        </div>
+      </div>
+
+      <div class="panel bottom-panel">
+        <h2>Missão quase concluída</h2>
+        <p id="shelterBody">Sua ação ajudou a proteger a comunidade.</p>
+        <div class="btn-row">
+          <button class="ui-btn secondary" onclick="finishMission()">Concluir missão</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-score" class="screen">
+      <div class="score-panel">
+        <div class="score-card">
+          <h2>Missão concluída</h2>
+          <p id="scoreMissionName">Fase 1 finalizada</p>
+          <div id="scoreStars" class="big-stars">⭐⭐⭐</div>
+          <p id="scoreMessage"></p>
+          <p>Tempo para enviar o DCA: <strong id="scoreTime">0.0s</strong></p>
+          <div class="btn-row" style="justify-content:center; margin-top:18px;">
+            <button class="ui-btn primary" onclick="returnToMapAfterScore()">Voltar ao mapa</button>
+            <button class="ui-btn neutral" onclick="retryMission()">Tentar novamente</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-final" class="screen">
+      <img class="bg" src="10 - Tela Final do Jogo.png" alt="Tela final" />
+      <div class="score-panel" style="background: rgba(0,0,0,0.28);">
+        <div class="score-card">
+          <h2>Parabéns</h2>
+          <p>Você completou todas as missões e ajudou a enviar o <strong>Defesa Civil Alerta (DCA)</strong> para proteger a cidade.</p>
+          <div id="finalStars" class="big-stars">⭐⭐⭐⭐⭐</div>
+          <p>Estrelas conquistadas: <strong id="finalTotalStars">0</strong></p>
+          <div class="btn-row" style="justify-content:center; margin-top:18px;">
+            <button class="ui-btn secondary" onclick="resetGame()">Jogar novamente</button>
+            <button class="ui-btn neutral" onclick="showScreen('screen-start')">Menu inicial</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const missions = {
+      1: {
+        name: 'Fase 1. Tempestade na barragem',
+        riskTitle: 'Situação detectada',
+        briefing: 'Chuva forte e raios estão atingindo a barragem. A Proteção e Defesa Civil precisa agir rápido.',
+        centerText: 'Os sensores indicam risco de agravamento. A população perto do rio precisa ser avisada agora.',
+        alertHeadline: 'Alerta de tempestade enviado',
+        alertBody: 'As famílias receberam a mensagem e já sabem que devem se afastar da área de risco.',
+        shelterBody: 'Com o alerta enviado a tempo, a comunidade conseguiu chegar ao Abrigo Seguro.',
+        img: 'barragem_tempestade_cartoon.png'
+      },
+      2: {
+        name: 'Fase 2. Inundação',
+        riskTitle: 'Inundação em andamento',
+        briefing: 'O rio subiu e a água já está entrando nas casas. É hora de avisar a população.',
+        centerText: 'As equipes identificaram inundação próxima às moradias. Envie o DCA rapidamente.',
+        alertHeadline: 'Alerta de inundação enviado',
+        alertBody: 'Moradores receberam o aviso e começaram a sair pelas rotas seguras.',
+        shelterBody: 'O aviso chegou a tempo e as famílias conseguiram alcançar o Abrigo Seguro.',
+        img: 'inundacao_cartoon_educativo.png'
+      },
+      3: {
+        name: 'Fase 3. Deslizamento',
+        riskTitle: 'Risco de deslizamento',
+        briefing: 'A encosta está cedendo e pode atingir casas. A Defesa Civil precisa alertar a região.',
+        centerText: 'Há risco de movimento de terra. Envie o DCA antes que a situação piore.',
+        alertHeadline: 'Alerta de deslizamento enviado',
+        alertBody: 'A mensagem orientou as famílias a deixarem a encosta e procurarem abrigo.',
+        shelterBody: 'Graças ao alerta, as pessoas saíram da área perigosa e ficaram em segurança.',
+        img: 'deslizamento_encosta_cartoon.png'
+      },
+      4: {
+        name: 'Fase 4. Incêndio florestal',
+        riskTitle: 'Incêndio próximo às casas',
+        briefing: 'O fogo está avançando na mata e se aproximando das moradias. É preciso enviar o alerta.',
+        centerText: 'Há risco para as casas próximas à vegetação. Envie o DCA para orientar a saída segura.',
+        alertHeadline: 'Alerta de incêndio enviado',
+        alertBody: 'A população recebeu o alerta e começou a se afastar do fogo.',
+        shelterBody: 'As famílias seguiram a orientação e chegaram ao Abrigo Seguro.',
+        img: 'incendio_florestal_cartoon.png'
+      },
+      5: {
+        name: 'Fase 5. Produto perigoso no rio',
+        riskTitle: 'Contaminação no rio',
+        briefing: 'Um produto perigoso foi derramado no rio. É preciso avisar a população para evitar contato com a água.',
+        centerText: 'A comunidade próxima ao rio precisa ser orientada imediatamente. Envie o DCA.',
+        alertHeadline: 'Alerta químico enviado',
+        alertBody: 'A mensagem avisou os moradores para se afastarem do rio e buscarem um local seguro.',
+        shelterBody: 'Com a orientação certa, a comunidade evitou o contato com a área contaminada.',
+        img: 'contaminacao_rio_cartoon.png'
+      }
+    };
+
+    let selectedCharacter = 'Alex';
+    let currentMission = 1;
+    let unlockedMission = 1;
+    let completedMissions = {};
+    let totalStars = 0;
+    let missionStart = null;
+    let timerInterval = null;
+    let currentElapsed = 0;
+    let debugVisible = false;
+    let missionPenaltyLevel = 0;
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function goToCharacterSelect() {
+      showScreen('screen-character');
+    }
+
+    function selectCharacter(name) {
+      selectedCharacter = name;
+      updatePlayerLabels();
+      updateMapUI();
+      showScreen('screen-map');
+    }
+
+    function updatePlayerLabels() {
+      document.getElementById('playerNameMap').textContent = selectedCharacter;
+      document.getElementById('mapCharacter').textContent = selectedCharacter;
+      document.getElementById('briefingCharacter').textContent = selectedCharacter;
+      const waitCharacter = document.getElementById('waitCharacter');
+      if (waitCharacter) waitCharacter.textContent = selectedCharacter;
+    }
+
+    function openMission(number) {
+      if (number > unlockedMission) {
+        alert('Essa fase ainda está bloqueada. Conclua a fase anterior primeiro.');
+        return;
+      }
+      currentMission = number;
+      missionPenaltyLevel = 0;
+      loadMissionBriefing();
+      updatePenaltyNote();
+      updateMissionPanelLayout();
+      updateProblemHighlight();
+      showScreen('screen-briefing');
+    }
+
+    
+    function updateProblemHighlight() {
+      const highlight = document.getElementById('problemHighlight');
+      const label = document.getElementById('problemLabel');
+
+      const positions = {
+        1:{left:'16%',top:'26%',size:'122px',labelLeft:'15.5%',labelTop:'22%',text:'Barragem em risco'},
+        2:{left:'14%',top:'60%',size:'142px',labelLeft:'13.5%',labelTop:'55%',text:'Casas alagadas'},
+        3:{left:'76%',top:'30%',size:'132px',labelLeft:'76%',labelTop:'25%',text:'Deslizamento'},
+        4:{left:'80%',top:'58%',size:'142px',labelLeft:'80%',labelTop:'53%',text:'Incêndio'},
+        5:{left:'67%',top:'72%',size:'122px',labelLeft:'67%',labelTop:'67%',text:'Produto perigoso'}
+      };
+
+      const pos = positions[currentMission];
+      if(!pos) return;
+
+      highlight.style.display='block';
+      label.style.display='block';
+
+      highlight.style.left = pos.left;
+      highlight.style.top = pos.top;
+      highlight.style.width = pos.size;
+      highlight.style.height = pos.size;
+
+      label.style.left = pos.labelLeft || pos.left;
+      label.style.top = pos.labelTop || `calc(${pos.top} - 30px)`;
+      label.textContent = pos.text;
+    }
+
+
+
+    function updateThinkingCharacter() {
+      const briefingChar = document.getElementById('briefingThinkingCharacter');
+      const waitChar = document.getElementById('waitThinkingCharacter');
+      const src = selectedCharacter === 'Ana' ? 'ana_pensando_transparente_v2.png' : 'alex_pensando_transparente_v2.png';
+      const rightSideMissions = [1, 2];
+      const charSide = rightSideMissions.includes(currentMission) ? 'left' : 'right';
+
+      [briefingChar, waitChar].forEach(el => {
+        if (!el) return;
+        el.src = src;
+        el.classList.remove('left', 'right');
+        el.classList.add(charSide);
+      });
+    }
+
+    function updateMissionPanelLayout() {
+      const briefingPanel = document.getElementById('briefingPanel');
+      const waitPanel = document.getElementById('waitPanel');
+      if (!briefingPanel || !waitPanel) return;
+
+      const rightSideMissions = [1, 2];
+      const panelSide = rightSideMissions.includes(currentMission) ? 'right' : 'left';
+
+      briefingPanel.classList.remove('left', 'right');
+      waitPanel.classList.remove('left', 'right');
+      briefingPanel.classList.add(panelSide);
+      waitPanel.classList.add(panelSide);
+      updateThinkingCharacter();
+    }
+
+    function loadMissionBriefing() {
+      const mission = missions[currentMission];
+      document.getElementById('briefingBg').src = mission.img;
+      document.getElementById('briefingTitle').textContent = mission.name;
+      document.getElementById('briefingText').textContent = mission.briefing;
+      document.getElementById('briefingHeadline').textContent = mission.riskTitle;
+      document.getElementById('briefingBody').textContent = mission.briefing;
+      document.getElementById('alertHeadline').textContent = mission.alertHeadline;
+      document.getElementById('alertBody').textContent = mission.alertBody;
+      const alertNewsBanner = document.getElementById('alertNewsBanner');
+      if (alertNewsBanner){
+        const freshAlertTicker = alertNewsBanner.cloneNode(true);
+        freshAlertTicker.textContent = mission.alertBody;
+        alertNewsBanner.parentNode.replaceChild(freshAlertTicker, alertNewsBanner);
+      }
+      document.getElementById('shelterBody').textContent = mission.shelterBody;
+      const shelterNewsBanner = document.getElementById('shelterNewsBanner');
+      if (shelterNewsBanner){
+        const freshShelterTicker = shelterNewsBanner.cloneNode(true);
+        freshShelterTicker.textContent = 'As famílias seguiram a orientação da Proteção e Defesa Civil e foram para um local protegido.';
+        shelterNewsBanner.parentNode.replaceChild(freshShelterTicker, shelterNewsBanner);
+      }
+      document.getElementById('waitBg').src = mission.img;
+      const centerMissionScreen = document.getElementById('centerMissionScreen');
+      if (centerMissionScreen) centerMissionScreen.src = mission.img;
+      const centerNewsBanner = document.getElementById('centerNewsBanner');
+      if (centerNewsBanner){
+        const freshTicker = centerNewsBanner.cloneNode(true);
+        freshTicker.textContent = mission.centerText;
+        centerNewsBanner.parentNode.replaceChild(freshTicker, centerNewsBanner);
+      }
+      document.getElementById('waitHeadline').textContent = 'O problema aumentou';
+      document.getElementById('waitTopText').textContent = 'Você esperou, e a situação ficou mais perigosa. Agora a Defesa Civil precisa agir ainda mais rápido.';
+      document.getElementById('waitBody').textContent = waitMessageForMission(currentMission);
+      updatePenaltyNote();
+      updateMissionPanelLayout();
+      updateProblemHighlight();
+    }
+
+    function updatePenaltyNote() {
+      const note = document.getElementById('penaltyNote');
+      if (!note) return;
+      if (missionPenaltyLevel <= 0) {
+        note.style.display = 'none';
+        note.textContent = '';
+        return;
+      }
+      const maxStars = getMaxStarsAllowed();
+      note.style.display = 'block';
+      note.textContent = `Você esperou o problema aumentar. Agora esta fase pode render no máximo ${maxStars} estrela${maxStars > 1 ? 's' : ''}.`;
+      const maxStarsText = document.getElementById('maxStarsText');
+      if (maxStarsText) maxStarsText.textContent = String(maxStars);
+    }
+
+    function waitMessageForMission(missionNumber) {
+      const messages = {
+        1: 'A chuva aumentou e a barragem está sob mais pressão. Esperar piorou a situação para quem mora perto do rio.',
+        2: 'A água subiu ainda mais e atingiu mais casas. Esperar reduziu o tempo para uma saída segura.',
+        3: 'A encosta ficou mais instável e o risco de deslizamento aumentou. Agora agir rápido é ainda mais importante.',
+        4: 'O fogo avançou na vegetação e ficou mais perto das moradias. Esperar deixou a situação mais perigosa.',
+        5: 'A contaminação se espalhou mais pelo rio. Agora mais pessoas podem ser afetadas se o alerta demorar.'
+      };
+      return messages[missionNumber] || 'A situação piorou. Vá agora para o Centro de Monitoramento.';
+    }
+
+    function getMaxStarsAllowed() {
+      if (missionPenaltyLevel <= 0) return 3;
+      if (missionPenaltyLevel === 1) return 2;
+      return 1;
+    }
+
+    function waitProblemIncrease() {
+      missionPenaltyLevel = Math.min(2, missionPenaltyLevel + 1);
+      updatePenaltyNote();
+      updateMissionPanelLayout();
+      updateProblemHighlight();
+      document.getElementById('waitBody').textContent = waitMessageForMission(currentMission);
+      document.getElementById('maxStarsText').textContent = String(getMaxStarsAllowed());
+      showScreen('screen-wait');
+    }
+
+    function showMissionCenter() {
+      stopTimer();
+      missionStart = performance.now();
+      currentElapsed = 0;
+      updateTimerUI(0);
+      timerInterval = setInterval(() => {
+        currentElapsed = (performance.now() - missionStart) / 1000;
+        updateTimerUI(currentElapsed);
+      }, 100);
+      showScreen('screen-center');
+    }
+
+    function backToBriefing() {
+      stopTimer();
+      showScreen('screen-briefing');
+    }
+
+    function updateTimerUI(seconds) {
+      document.getElementById('timerText').textContent = seconds.toFixed(1) + 's';
+      const max = 15;
+      const left = Math.max(0, 1 - (seconds / max));
+      document.getElementById('timeBar').style.transform = `scaleX(${left})`;
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function sendAlert() {
+      stopTimer();
+      if (missionStart === null) missionStart = performance.now();
+      currentElapsed = (performance.now() - missionStart) / 1000;
+      showScreen('screen-alert');
+    }
+
+    function showMissionShelter() {
+      showScreen('screen-shelter');
+    }
+
+    function getStarsForTime(seconds) {
+      let stars = 1;
+      if (seconds <= 5) stars = 3;
+      else if (seconds <= 10) stars = 2;
+      return Math.min(stars, getMaxStarsAllowed());
+    }
+
+    function starsText(count) {
+      return '⭐'.repeat(count);
+    }
+
+    function finishMission() {
+      const stars = getStarsForTime(currentElapsed);
+      const previous = completedMissions[currentMission] || 0;
+      completedMissions[currentMission] = Math.max(previous, stars);
+
+      if (currentMission === unlockedMission && unlockedMission < 5) {
+        unlockedMission += 1;
+      }
+
+      recalculateTotalStars();
+
+      document.getElementById('scoreMissionName').textContent = missions[currentMission].name;
+      document.getElementById('scoreStars').textContent = starsText(stars);
+      document.getElementById('scoreTime').textContent = currentElapsed.toFixed(1) + 's';
+      document.getElementById('scoreMessage').textContent = scoreMessage(stars);
+
+      updateMapUI();
+      showScreen('screen-score');
+    }
+
+    function scoreMessage(stars) {
+      if (stars === 3) return 'Excelente. Você enviou o Defesa Civil Alerta (DCA) muito rápido.';
+      if (stars === 2) return 'Bom trabalho. O alerta foi enviado em tempo adequado.';
+      return 'Você cumpriu a missão, mas pode agir ainda mais rápido na próxima vez.';
+    }
+
+    function recalculateTotalStars() {
+      totalStars = Object.values(completedMissions).reduce((sum, value) => sum + value, 0);
+    }
+
+    function retryMission() {
+      missionPenaltyLevel = 0;
+      loadMissionBriefing();
+      updatePenaltyNote();
+      updateMissionPanelLayout();
+      updateProblemHighlight();
+      showScreen('screen-briefing');
+    }
+
+    function returnToMapAfterScore() {
+      if (Object.keys(completedMissions).length === 5) {
+        document.getElementById('finalTotalStars').textContent = totalStars;
+        document.getElementById('finalStars').textContent = starsText(Math.max(3, Math.min(5, Math.ceil(totalStars / 3))));
+        showScreen('screen-final');
+        return;
+      }
+      showScreen('screen-map');
+    }
+
+    function updateMapUI() {
+      document.getElementById('missionsDone').textContent = Object.keys(completedMissions).length;
+      document.getElementById('totalStars').textContent = totalStars;
+
+      const markerPositions = {
+        1: { left: '8%', top: '27%' },
+        2: { left: '12%', top: '58%' },
+        3: { left: '73%', top: '27%' },
+        4: { left: '73%', top: '57%' },
+        5: { left: '55%', top: '84%' }
+      };
+
+      for (let i = 1; i <= 5; i++) {
+        const marker = document.getElementById('marker' + i);
+        if (!marker) continue;
+
+        const unlocked = unlockedMission >= i;
+        marker.classList.toggle('locked', !unlocked);
+        marker.classList.remove('available');
+
+        const lock = marker.querySelector('.marker-lock');
+        if (lock) lock.style.display = unlocked ? 'none' : 'flex';
+
+        if (i === unlockedMission) {
+          marker.classList.add('available');
+        }
+
+        const stars = completedMissions[i] || 0;
+        const starBox = document.getElementById('markerStars' + i);
+        if (stars > 0) {
+          starBox.textContent = starsText(stars);
+          marker.classList.add('show-stars');
+        } else {
+          starBox.textContent = '';
+          marker.classList.remove('show-stars');
+        }
+      }
+
+      const currentPos = markerPositions[Math.min(unlockedMission, 5)];
+      const avatar = document.getElementById('mapAvatar');
+      avatar.src = selectedCharacter === 'Ana' ? 'ana_character.png' : 'alex_character.png';
+      avatar.style.left = currentPos.left;
+      avatar.style.top = currentPos.top;
+
+      if (Object.keys(completedMissions).length === 5) {
+        document.getElementById('finalTotalStars').textContent = totalStars;
+      }
+    }
+
+    function resetGame() {
+      stopTimer();
+      currentMission = 1;
+      unlockedMission = 1;
+      completedMissions = {};
+      totalStars = 0;
+      missionStart = null;
+      currentElapsed = 0;
+      missionPenaltyLevel = 0;
+      updateTimerUI(0);
+      updateMapUI();
+      updatePlayerLabels();
+      showScreen('screen-start');
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key.toLowerCase() === 'd') {
+        debugVisible = !debugVisible;
+        document.querySelectorAll('.hotspot').forEach(el => {
+          el.classList.toggle('show-debug', debugVisible);
+        });
+      }
+    });
+
+    updatePlayerLabels();
+    updateMapUI();
+  </script>
+</body>
+</html>
