@@ -346,6 +346,112 @@
       transform: perspective(1200px) rotateX(0.2deg);
       filter: saturate(1.02) contrast(1.01);
     }
+    
+    .briefing-panel-upgrade{
+      justify-content:flex-end;
+      padding:24px 24px 28px 24px;
+      gap:14px;
+    }
+    .briefing-character-wrap{
+      display:flex;
+      justify-content:center;
+      margin-bottom:4px;
+    }
+    .briefing-character-card{
+      width:min(34%, 180px);
+      min-width:120px;
+      display:block;
+      filter: drop-shadow(0 12px 22px rgba(0,0,0,0.28));
+    }
+    .speech-bubble{
+      position:relative;
+      background:rgba(255,255,255,0.96);
+      color:#18304c;
+      border-radius:22px;
+      padding:18px 18px 16px 18px;
+      box-shadow:0 14px 26px rgba(0,0,0,0.22);
+      margin-bottom:4px;
+    }
+    .speech-bubble:after{
+      content:"";
+      position:absolute;
+      top:-14px;
+      left:50%;
+      transform:translateX(-50%);
+      border-width:0 14px 16px 14px;
+      border-style:solid;
+      border-color:transparent transparent rgba(255,255,255,0.96) transparent;
+    }
+    .speech-phase{
+      font-size: clamp(24px, 2vw, 38px);
+      font-weight: 900;
+      line-height:1.1;
+      margin-bottom:10px;
+      color:#102843;
+    }
+    .speech-player{
+      font-size: clamp(15px, 1.05vw, 19px);
+      font-weight: 800;
+      margin-bottom: 12px;
+      color:#35506e;
+    }
+    .speech-text{
+      font-size: clamp(18px, 1.35vw, 24px);
+      line-height: 1.35;
+      font-weight: 700;
+      color:#18304c;
+    }
+    .briefing-actions{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top:4px;
+    }
+    .briefing-actions .ui-btn{
+      width:100%;
+      font-size: clamp(17px, 1.22vw, 23px);
+      padding:16px 22px;
+    }
+    .briefing-actions .primary{
+      font-size: clamp(18px, 1.34vw, 25px);
+      padding:18px 24px;
+      box-shadow:0 16px 28px rgba(240,109,0,0.35);
+    }
+
+
+    .map-title-badge{
+      position:absolute;
+      left:2.2%;
+      top:2.2%;
+      z-index:6;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      pointer-events:none;
+    }
+    .map-title-main{
+      display:inline-block;
+      background:rgba(0,0,0,0.72);
+      color:#fff;
+      padding:12px 18px;
+      border-radius:16px;
+      font-size:clamp(22px, 1.9vw, 34px);
+      font-weight:900;
+      box-shadow:var(--shadow);
+      line-height:1.05;
+    }
+    .map-title-sub{
+      display:inline-block;
+      background:rgba(0,0,0,0.58);
+      color:#f3f7ff;
+      padding:8px 14px;
+      border-radius:14px;
+      font-size:clamp(14px, 1vw, 18px);
+      font-weight:700;
+      box-shadow:var(--shadow);
+      line-height:1.2;
+    }
+
     .map-avatar{
       position:absolute;
       width:9%;
@@ -504,6 +610,137 @@
       50% { transform: translateY(-8px); }
       100% { transform: translateY(0px); }
     }
+
+    
+    .intro-scene{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      z-index:1;
+    }
+    .intro-video{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      pointer-events:none;
+      background:#000;
+    }
+    .intro-dark{
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(180deg, rgba(4,10,18,0.10), rgba(4,10,18,0.42)),
+        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.08), transparent 38%);
+      pointer-events:none;
+      z-index:2;
+    }
+    .lightning-flash{
+      position:absolute;
+      inset:0;
+      background:rgba(255,255,255,0);
+      pointer-events:none;
+      animation: flashStorm 4s infinite;
+      mix-blend-mode: screen;
+      z-index:3;
+    }
+    @keyframes flashStorm{
+      0%, 72%, 100% { background:rgba(255,255,255,0); }
+      73% { background:rgba(255,255,255,0.08); }
+      74% { background:rgba(255,255,255,0.26); }
+      75% { background:rgba(255,255,255,0.05); }
+      76% { background:rgba(255,255,255,0.18); }
+      77% { background:rgba(255,255,255,0); }
+    }
+    .intro-logo-box{
+      position:absolute;
+      left:4.8%;
+      top:13.5%;
+      width:min(40%, 500px);
+      background:rgba(7,20,34,0.78);
+      border:1px solid rgba(255,255,255,0.16);
+      border-radius:30px;
+      padding:30px 30px 26px 30px;
+      box-shadow:0 18px 32px rgba(0,0,0,0.30);
+      backdrop-filter:blur(7px);
+      animation: logoFade 1.1s ease-out 0.7s both;
+      z-index:4;
+    }
+    .intro-badge{
+      display:inline-block;
+      background:linear-gradient(180deg, #c81919, #8d1010);
+      color:#fff;
+      border-radius:999px;
+      padding:8px 14px;
+      font-size:clamp(13px, 0.95vw, 18px);
+      font-weight:900;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      margin-bottom:14px;
+      box-shadow: var(--shadow);
+    }
+    .intro-logo-box h1{
+      margin:0 0 12px 0;
+      font-size:clamp(34px, 3.2vw, 58px);
+      line-height:1.02;
+    }
+    .intro-logo-box p{
+      margin:0 0 20px 0;
+      font-size:clamp(18px, 1.28vw, 24px);
+      line-height:1.35;
+    }
+    .intro-cta{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .intro-cta .primary{
+      box-shadow:0 18px 28px rgba(240,109,0,0.34);
+      animation:pulseBtn 2s infinite;
+    }
+    .intro-caption{
+      position:absolute;
+      left:10%;
+      top:2.2%;
+      transform:translateX(-50%);
+      width:min(84%, 1120px);
+      background:rgba(0,0,0,0.52);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:999px;
+      padding:12px 22px;
+      font-size:clamp(15px, 1vw, 18px);
+      line-height:1.35;
+      font-weight:800;
+      text-align:center;
+      box-shadow: var(--shadow);
+      z-index:4;
+      animation: logoFade 1s ease-out 1.2s both;
+    }
+    @keyframes pulseBtn{
+      0%{ transform:scale(1); }
+      50%{ transform:scale(1.04); }
+      100%{ transform:scale(1); }
+    }
+    @keyframes logoFade{
+      from{
+        opacity:0;
+        transform:translateY(24px);
+      }
+      to{
+        opacity:1;
+        transform:translateY(0);
+      }
+    }
+      to{
+        opacity:1;
+        transform:translateY(0);
+      }
+    }
+
+
+
     @media (max-width: 900px) {
       .panel { width: 92%; }
       .progress { width: 58vw; }
@@ -514,7 +751,29 @@
 </head>
 <body>
   <div id="game">
-    <section id="screen-start" class="screen active">
+    <section id="screen-intro" class="screen active">
+      <div class="intro-scene">
+        <video class="intro-video" autoplay muted loop playsinline preload="auto">
+          <source src="alex_intro_abrigo.mp4" type="video/mp4" />
+        </video>
+        <div class="intro-dark"></div>
+        <div class="lightning-flash"></div>
+      </div>
+
+      <div class="intro-logo-box">
+        <div class="intro-badge">DPS/SEDEC/MIDR</div>
+        <h1>Heróis da Proteção e Defesa Civil</h1>
+        <p>Envie alertas, aja rápido e ajude a população a chegar em segurança ao Abrigo Seguro.</p>
+        <div class="intro-cta">
+          <button class="ui-btn primary" onclick="showScreen('screen-start')">Começar</button>
+          <button class="ui-btn neutral" onclick="showScreen('screen-tutorial')">Como jogar</button>
+        </div>
+      </div>
+
+      <div class="intro-caption">A tempestade chegou. Agora é hora de agir rápido, orientar a população e proteger vidas.</div>
+    </section>
+
+    <section id="screen-start" class="screen">
       <img class="bg" src="happy_start_screen.png" alt="Tela inicial" />
       <img src="alex_character.png" alt="Alex" style="position:absolute; left:5.5%; bottom:2%; width:24%; max-width:260px; pointer-events:none; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35)); animation: floatChar 2.8s ease-in-out infinite;" />
       <img src="ana_character.png" alt="Ana" style="position:absolute; right:5.5%; bottom:2%; width:24%; max-width:260px; pointer-events:none; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35)); animation: floatChar 3.1s ease-in-out infinite 0.2s;" />
@@ -555,9 +814,9 @@
     <section id="screen-map" class="screen">
       <img class="bg" src="Copilot_20260322_115351.png" alt="Mapa da cidade" />
 
-      <div class="mission-header" style="max-width:min(34vw, 430px);">
-        <h3>Mapa da Cidade</h3>
-        <p><strong id="playerNameMap">Alex</strong>, escolha a próxima missão e envie o <strong>Defesa Civil Alerta (DCA)</strong>.</p>
+      <div class="map-title-badge">
+        <div class="map-title-main">Mapa da Cidade</div>
+        <div class="map-title-sub"><span id="playerNameMap">Alex</span>, escolha a próxima missão</div>
       </div>
 
       <div class="hud">
@@ -616,25 +875,23 @@
       
       <div id="problemHighlight" class="problem-highlight" style="display:none;"></div>
       <div id="problemLabel" class="problem-label" style="display:none;"></div>
-      <img id="briefingThinkingCharacter" class="thinking-character left" src="alex_pensando_transparente_v2.png" alt="Personagem pensando" />
+<div id="briefingPanel" class="panel side-panel left briefing-panel-upgrade">
+        <div class="briefing-character-wrap">
+          <img id="briefingCharacterCard" class="briefing-character-card" src="alex_character.png" alt="Personagem selecionado" />
+        </div>
 
+        <div class="speech-bubble">
+          <div id="briefingTitle" class="speech-phase">Fase 1</div>
+          <div class="speech-player">Personagem: <span id="briefingCharacter">Alex</span></div>
+          <div id="briefingBody" class="speech-text">A chuva forte atingiu a barragem e ela esta transbordando. Você precisa agir rápido.</div>
+        </div>
 
-      <div class="mission-header">
-        <h3 id="briefingTitle">Fase 1</h3>
-        <p id="briefingText"></p>
-      </div>
-      <div class="hud">
-        <div class="box">Personagem: <span id="briefingCharacter">Alex</span></div>
-        <div class="box">Prepare-se para agir rápido</div>
-      </div>
-      <div id="briefingPanel" class="panel side-panel left">
-        <h2 id="briefingHeadline">Situação detectada</h2>
-        <p id="briefingBody"></p>
-        <div class="btn-row">
+        <div class="briefing-actions">
           <button class="ui-btn primary" onclick="showMissionCenter()">Ir para o Centro de Monitoramento</button>
           <button class="ui-btn warning" onclick="waitProblemIncrease()">Esperar o problema aumentar</button>
           <button class="ui-btn neutral" onclick="showScreen('screen-map')">Voltar ao mapa</button>
         </div>
+
         <div id="penaltyNote" class="penalty-note" style="display:none;"></div>
       </div>
     </section>
@@ -844,6 +1101,8 @@
       document.getElementById('playerNameMap').textContent = selectedCharacter;
       document.getElementById('mapCharacter').textContent = selectedCharacter;
       document.getElementById('briefingCharacter').textContent = selectedCharacter;
+      const briefingCharacterCard = document.getElementById('briefingCharacterCard');
+      if (briefingCharacterCard) briefingCharacterCard.src = selectedCharacter === 'Ana' ? 'ana_character.png' : 'alex_character.png';
       const waitCharacter = document.getElementById('waitCharacter');
       if (waitCharacter) waitCharacter.textContent = selectedCharacter;
     }
@@ -894,13 +1153,12 @@
 
 
     function updateThinkingCharacter() {
-      const briefingChar = document.getElementById('briefingThinkingCharacter');
       const waitChar = document.getElementById('waitThinkingCharacter');
       const src = selectedCharacter === 'Ana' ? 'ana_pensando_transparente_v2.png' : 'alex_pensando_transparente_v2.png';
       const rightSideMissions = [1, 2];
       const charSide = rightSideMissions.includes(currentMission) ? 'left' : 'right';
 
-      [briefingChar, waitChar].forEach(el => {
+      [waitChar].forEach(el => {
         if (!el) return;
         el.src = src;
         el.classList.remove('left', 'right');
@@ -927,8 +1185,6 @@
       const mission = missions[currentMission];
       document.getElementById('briefingBg').src = mission.img;
       document.getElementById('briefingTitle').textContent = mission.name;
-      document.getElementById('briefingText').textContent = mission.briefing;
-      document.getElementById('briefingHeadline').textContent = mission.riskTitle;
       document.getElementById('briefingBody').textContent = mission.briefing;
       document.getElementById('alertHeadline').textContent = mission.alertHeadline;
       document.getElementById('alertBody').textContent = mission.alertBody;
